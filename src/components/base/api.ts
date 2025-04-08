@@ -1,5 +1,5 @@
 export type ApiListResponse<Type> = {
-    total: number,
+    // total: number,
     items: Type[]
 };
 
