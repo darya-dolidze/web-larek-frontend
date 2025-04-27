@@ -1,9 +1,8 @@
 import { IProduct } from "../../types";
 import { Api, ApiListResponse } from "../base/api"
 
-export class ApiModel extends Api {
+export class WebLarekApi extends Api {
     readonly cdnUrl: string;
-    items: IProduct[];
 
     constructor(baseUrl: string, cdnUrl: string, options?: RequestInit) {
         super(baseUrl, options);
@@ -20,15 +19,5 @@ export class ApiModel extends Api {
             }));
         }
         return data.items;
-    }
-
-    async getProduct(product:IProduct): Promise<IProduct>{
-        const item = await super.get(`/product/${product.id}`) as IProduct;
-        if (item) {
-        return {
-            ...item,
-            image: this.cdnUrl + item.image
-        };
-    }
     }
 }

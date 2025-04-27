@@ -1,24 +1,37 @@
+import { IActions } from "../../types";
+import { Component } from "../base/Component";
 import { IEvents } from "../base/events";
 
+export interface ISuccess {
+  description: number;
+}
 
-export class SuccessView {
-    
-    private _successContainer: HTMLElement;
+
+export class SuccessView extends Component<ISuccess> {
+
     private _closeButton: HTMLButtonElement;
     private _successDescription: HTMLElement;
 
-    constructor(template: HTMLTemplateElement, private events: IEvents, sumProducts?: string) {
-
-        this._successContainer = template.content.cloneNode(true) as HTMLElement;
-        this._successDescription = this._successContainer.querySelector('.order-success__description') as HTMLButtonElement;
-        this._closeButton = this._successContainer.querySelector('.order-success__close') as HTMLButtonElement;
-        this._successDescription.textContent = `Списано ${sumProducts ?? '0 синапсов'}`;
-        this._closeButton.addEventListener('click', () => {
-            this.events.emit('model:close');
-        });
+    constructor(template: HTMLTemplateElement,
+        private events: IEvents, 
+        actions?:IActions) 
+        {
+        const container = template.content.cloneNode(true) as HTMLElement;
+        super(container);
+        
+        this._successDescription = this.container.querySelector('.order-success__description') as HTMLButtonElement;
+        this._closeButton = this.container.querySelector('.order-success__close') as HTMLButtonElement;
+        
+        if (actions?.onClick) {
+            if (this._closeButton) {
+                this._closeButton.addEventListener('click', actions.onClick)
+            }
+        }
     }
 
-    render(): HTMLElement {
-        return this._successContainer;
+    set description (value:number){
+        this._successDescription.textContent = `Списано ${value ?? '0 синапсов'}`;
     }
+    
+
 }

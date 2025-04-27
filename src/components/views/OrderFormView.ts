@@ -1,45 +1,52 @@
-import { IOrder } from "../../types";
+import { FormType, IOrder } from "../../types";
 import { IEvents } from "../base/events";
-import { FormModel } from "../models/FormModel";
+import { FormModel } from "./FormModel";
 
+export interface IOrderForm {
+    payment: string;
+    address: string;
+}
 
-export class OrderForm extends FormModel implements IOrder {
-    paymentMethod: string;
-    deliveryAddress: string;
-
-    protected _paymentButtons: NodeListOf<HTMLButtonElement>;
+export class OrderForm extends FormModel<IOrderForm> {
     protected _address: HTMLInputElement;
+    protected _payment: string = '';
+    protected _buttons: NodeListOf<HTMLButtonElement>;
 
+    constructor(template: HTMLTemplateElement, protected events: IEvents) {
+        const fragment = template.content.cloneNode(true) as DocumentFragment;
+        const form = fragment.querySelector('form') as HTMLFormElement;
+        
+        super(form, events);
 
-    constructor(formTemplate: HTMLTemplateElement, protected events: IEvents) {
-        super(formTemplate, events);
-        this._paymentButtons = this._formOrderContainer.querySelectorAll('.order__buttons button');
-        this._address = this._formOrderContainer.querySelector('.form__input') as HTMLInputElement;
-        this._nextButton.addEventListener('click', () => { this.events.emit('personalInfo:open') });
+        this._address = form.querySelector('input[name="address"]')!;
+        this._buttons = form.querySelectorAll('.order__buttons button');
 
-        this.init();
-    }
-
-    // Инициализация событий
-    init() {
-        this._paymentButtons.forEach(button => {
+        // навесим слушатели на кнопки способа оплаты
+        this._buttons.forEach(button => {
             button.addEventListener('click', () => {
-                this.paymentMethod = button.textContent || '';
-                this.paymentSelection = button.name;
-                this.updateNextButtonState();
+                this.setpayment(button.name);
             });
         });
-
-        this._address.addEventListener('input', () => {
-            this.deliveryAddress = this._address.value;
-            this.updateNextButtonState();
-        });
     }
 
-    set paymentSelection(paymentMethod: string) {
-    this._paymentButtons.forEach(item => {
-      item.classList.toggle('button_alt-active', item.name === paymentMethod);
-    })
-  }
+    setpayment(method: string) {
+        this._payment = method;
 
+        this._buttons.forEach(button => {
+        if (button.name === method) {
+            button.classList.add('button_alt-active');
+        } else {
+            button.classList.remove('button_alt-active');
+        }
+        });
+
+        this.onInputChange('payment', method);
+    }
+    
+    clear(): void {
+        this._address.value = '';
+        this._buttons.forEach(button => {
+            button.classList.remove('button_alt-active');
+        });
+    }
 }

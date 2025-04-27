@@ -1,101 +1,82 @@
-import { IProduct } from "../../types";
+import { IActions, IProduct, IProductBasket } from "../../types";
+import { formatPrice } from "../../utils/utils";
+import { Component } from "../base/Component";
 import { IEvents } from "../base/events";
 
-export class BasketView {
-    protected _basketTemplate: HTMLTemplateElement;
-    protected _basketContainer: HTMLElement;
+export interface IBasket {
+  list: HTMLElement[];
+  price: number;
+}
+
+export class BasketView extends Component<IBasket> {
     protected _title: HTMLElement;
     protected _basketList: HTMLElement;
     protected _buttonOrder: HTMLButtonElement;
     protected _basketPrice: HTMLElement;
-    protected _headerBasketButton: HTMLButtonElement;
-    protected _headerBasketCounter: HTMLElement;
-    protected items: IProduct[] = [];
 
     constructor(template: HTMLTemplateElement, protected events: IEvents) {
-        this._basketTemplate = template;
-        this._basketContainer = this._basketTemplate.content.querySelector('.basket').cloneNode(true) as HTMLElement;
+        const basketContainer = template.content.querySelector('.basket').cloneNode(true) as HTMLElement;
 
-        this._title = this._basketContainer.querySelector('.modal__title');
-        this._basketList = this._basketContainer.querySelector('.basket__list');
-        this._buttonOrder = this._basketContainer.querySelector('.basket__button');
-        this._basketPrice = this._basketContainer.querySelector('.basket__price');
-        this._headerBasketButton = document.querySelector('.header__basket');
-        this._headerBasketCounter = document.querySelector('.header__basket-counter');
+        super(basketContainer)
+        
+        this._title = basketContainer.querySelector('.modal__title');
+        this._basketList = basketContainer.querySelector('.basket__list');
+        this._basketPrice = basketContainer.querySelector('.basket__price');
+        this._buttonOrder = basketContainer.querySelector('.basket__button');
 
         this._buttonOrder.addEventListener('click', () => { this.events.emit('order:open') });
-        this._headerBasketButton.addEventListener('click', () => { this.events.emit('basket:open') });
-
-        this.events.on('basket:add', (product: IProduct) => this.addToBasket(product));
+    }  
+    
+    // Сеттер для общей цены
+    set price(value: number) {
+        this._basketPrice.textContent = formatPrice(value);
     }
 
-    addToBasket(product: IProduct) {
-        this.items.push(product);
-        this.renderBasket();
-    }
-
-    renderBasket() {
-        this._basketList.innerHTML = "";
-        if (this.items.length === 0) {
-            this._basketList.innerHTML = "<p class='basket__empty'>Корзина пуста</p>";
-            this._basketPrice.textContent = "0 синапсов";
+    // Сеттер для списка товаров 
+    set list(items: HTMLElement[]) {
+        this._basketList.replaceChildren(...items);
+        if (items.length === 0) {
+            const emptyElement = document.createElement('p');
+            emptyElement.classList.add('basket__empty');
+            emptyElement.textContent = 'Корзина пуста';
+            this._basketList.append(emptyElement);
             this._buttonOrder.disabled = true;
-            return;
-        }
-        this.items.forEach((product, index) => {
-            const itemTemplate = document.getElementById('card-basket') as HTMLTemplateElement;
-            const itemElement = itemTemplate.content.cloneNode(true) as HTMLElement;
-
-            const titleElement = itemElement.querySelector('.card__title') as HTMLElement;
-            const priceElement = itemElement.querySelector('.card__price') as HTMLElement;
-            const deleteButton = itemElement.querySelector('.basket__item-delete') as HTMLButtonElement;
-            const indexElement = itemElement.querySelector('.basket__item-index') as HTMLElement;
-
+        } else {
             this._buttonOrder.disabled = false;
-
-            titleElement.textContent = product.title;
-            if (product.price === null){
-                priceElement.textContent = `Бесценно`;
-            } else{
-                priceElement.textContent = `${product.price} синапсов`;
-            }
-
-            indexElement.textContent = String(index + 1);
-            deleteButton.addEventListener('click', () => {
-                this.removeFromBasket(product);
-            });
-            this._basketList.appendChild(itemElement);
-        });
-        this._basketPrice.textContent = this.getSumAllProducts();
-        this.renderHeaderBasketCounter(this.items.length);
-    }
-
-    renderHeaderBasketCounter(value: number): void {
-        this._headerBasketCounter.textContent = String(value);
-    }
-
-    getSumAllProducts(): string {
-        const sumAll = this.items.reduce((sum, product) => sum + product.price, 0)
-        return `${sumAll} синапсов`;
-    }
-
-    render(): HTMLElement {
-        this._title.textContent = 'Корзина';
-        this.renderBasket();
-        return this._basketContainer;
+        }
     }
     
-    removeFromBasket(product: IProduct) {
-        this.items = this.items.filter(item => item !== product);
-        this.renderBasket();
+}
+export class BasketItemView extends Component<IProductBasket> {
+    protected _index: HTMLElement;
+    protected _title: HTMLElement;
+    protected _price: HTMLElement;
+    protected _button: HTMLButtonElement;
+
+    constructor(template: HTMLTemplateElement, protected events: IEvents, actions?:IActions) {
+        const itemElement = template.content.querySelector('.basket__item')!.cloneNode(true) as HTMLElement;
+
+        super(itemElement);
+
+        this._title = itemElement.querySelector('.card__title') as HTMLElement;
+        this._price = itemElement.querySelector('.card__price') as HTMLElement;
+        this._button = itemElement.querySelector('.basket__item-delete') as HTMLButtonElement;
+        this._index = itemElement.querySelector('.basket__item-index') as HTMLElement;
+        this._button.addEventListener('click', (e) => {
+            this.container.remove();
+            actions?.onClick(e);
+        });
     }
 
-    clearBasket() {
-        this.items = []
-        this.renderBasket()
+    set title(value: string) {
+        this._title.textContent = value;
     }
 
-    listElementBasket(): Array<IProduct> {
-        return this.items;
+    set index(value: number) {
+        this._index.textContent = value.toString();
+    }
+
+    set price(value: number | null) {
+        this._price.textContent = formatPrice(value);
     }
 }

@@ -133,3 +133,16 @@ export function createElement<
     }
     return element;
 }
+
+export function formatPrice(value: number | null): string {
+  if (value === null) {
+    return "Бесценно";
+  }
+
+  // Преобразуем число: 1000 → "1000", 10000 → "10 000"
+  const formatted = value.toString().length > 4
+    ? value.toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ")
+    : value.toString();
+
+  return `${formatted} синапсов`;
+}
