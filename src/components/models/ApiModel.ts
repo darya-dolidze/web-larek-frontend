@@ -1,4 +1,4 @@
-import { IProduct } from '../../types';
+import { IOrder, IOrderResult, IProduct } from '../../types';
 import { Api, ApiListResponse } from '../base/api';
 
 export class WebLarekApi extends Api {
@@ -20,4 +20,9 @@ export class WebLarekApi extends Api {
 		}
 		return data.items;
 	}
+	//Метод для отправки заказа
+    async sendOrder(orderData: IOrder): Promise<IOrderResult> {
+        return await super.post('/order', orderData) as IOrderResult;
+    }
+
 }

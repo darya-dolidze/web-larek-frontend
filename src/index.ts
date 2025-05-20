@@ -1,7 +1,7 @@
 import './scss/styles.scss';
 import { ApiListResponse } from './components/base/api';
 import { EventEmitter } from './components/base/events';
-import { ensureElement } from './utils/utils';
+import { ensureElement, cloneTemplate } from './utils/utils';
 import { API_URL, CDN_URL } from './utils/constants'; // API_URL из .env
 import { WebLarekApi } from './components/models/ApiModel';
 import { ProductListView } from './components/views/ProductView';
@@ -10,18 +10,19 @@ import { Page } from './components/views/Page';
 import { ModalView } from './components/views/ModalView';
 import { BasketItemView, BasketView } from './components/views/BasketView';
 import { SuccessView } from './components/views/SuccesssView';
-import { IProduct } from './types';
+import { IOrderResult, IProduct } from './types';
 import { IOrderForm, OrderForm } from './components/views/OrderFormView';
 import { ContactForm } from './components/views/ContactFormView';
 
 const api = new WebLarekApi(API_URL, CDN_URL);
 // Шаблоны
+
 const cardCatalogTemplate = ensureElement<HTMLTemplateElement>('#card-catalog');
 const cardCatalogPreview = ensureElement<HTMLTemplateElement>('#card-preview');
 const modalTemplate = ensureElement<HTMLTemplateElement>('#modal-container');
 const basketTemplate = ensureElement<HTMLTemplateElement>('#basket');
 const productBasketTemplate =
-	ensureElement<HTMLTemplateElement>('#card-basket');
+ensureElement<HTMLTemplateElement>('#card-basket');
 const orderTemplate = ensureElement<HTMLTemplateElement>('#order');
 const contactTemplate = ensureElement<HTMLTemplateElement>('#contacts');
 const successTemplate = ensureElement<HTMLTemplateElement>('#success');
@@ -34,13 +35,13 @@ const appData = new AppState({}, events);
 // Компоненты приложения
 const page = new Page(document.body, events);
 const modal = new ModalView(modalTemplate, events);
-const basket = new BasketView(basketTemplate, events);
-const orderForm = new OrderForm(orderTemplate, events);
-const contactForm = new ContactForm(contactTemplate, events);
+const basket = new BasketView(cloneTemplate(basketTemplate), events);
+const orderForm = new OrderForm(cloneTemplate(orderTemplate), events);
+const contactForm = new ContactForm(cloneTemplate(contactTemplate), events);
 
 function renderBasketView(): HTMLElement {
 	const basketItems = appData.basket.items.map((item, index) => {
-		const productItem = new BasketItemView(productBasketTemplate, events, {
+		const productItem = new BasketItemView(cloneTemplate(productBasketTemplate), events, {
 			onClick: () => events.emit('basket:delete', item),
 		});
 
@@ -67,7 +68,7 @@ api
 // Отображение списка продуктов
 events.on('items:show', () => {
 	page.catalog = appData.catalog.map((item) => {
-		const product = new ProductListView(cardCatalogTemplate, {
+		const product = new ProductListView(cloneTemplate(cardCatalogTemplate), {
 			onClick: () => events.emit('card:select', item),
 		});
 		return product.render({
@@ -83,7 +84,7 @@ events.on('items:show', () => {
 // Открытие модального окна для одного продукта
 events.on('card:select', (item: IProduct) => {
 	page.scrollLock = true;
-	const product = new ProductListView(cardCatalogPreview, {
+	const product = new ProductListView(cloneTemplate(cardCatalogPreview), {
 		onClick: () => events.emit('basket:add', item),
 	});
 	const viewProduct = product.render({
@@ -110,7 +111,7 @@ events.on('basket:add', (item: IProduct) => {
 // Открытие модального окна для корзины
 events.on('basket:open', () => {
 	page.scrollLock = true;
-	appData.basket.update();
+	appData.basket.getState();
 	modal.render({
 		content: renderBasketView(),
 	});
@@ -119,7 +120,7 @@ events.on('basket:open', () => {
 // Удаление товара из корзины
 events.on('basket:delete', (item: IProduct) => {
 	appData.basket.remove(item.id);
-	appData.basket.update();
+	appData.basket.getState();
 	item.selected = false;
 	page.counter = appData.basket.getCount();
 	modal.render({
@@ -173,25 +174,26 @@ events.on(
 events.on('contactform:submit', () => {
 	appData.setItemsOrder();
 	appData.setTotalPriceOrder();
-	api
-		.post('/order', appData.order.order)
-		.then((res) => {
-			events.emit('success:open', res);
-			appData.basket.clean();
-			appData.order.refresh();
-			orderForm.clear();
-			page.counter = 0;
-			appData.resetSelected();
-		})
-		.catch((err) => {
-			console.log(err);
-		});
+
+    api.sendOrder(appData.order.order)
+        .then((res: IOrderResult) => {
+            events.emit('success:open', res);
+            appData.basket.clean();
+            appData.order.refresh();
+            orderForm.clear();
+            page.counter = 0;
+            appData.resetSelected();
+        })
+        .catch((err) => {
+            console.error('Ошибка оформления заказа:', err);
+            events.emit('order:error', err);
+        });
 });
 
 // Открытие окна для успешной оплаты
 
 events.on('success:open', (res: ApiListResponse<string>) => {
-	const success = new SuccessView(successTemplate, events, {
+	const success = new SuccessView(cloneTemplate(successTemplate), events, {
 		onClick: () => events.emit('success:close'),
 	});
 	modal.render({

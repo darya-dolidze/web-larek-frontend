@@ -1,3 +1,4 @@
+import { ensureElement } from '../../utils/utils';
 import { IEvents } from '../base/events';
 import { FormView } from './FormView';
 
@@ -12,14 +13,11 @@ export class ContactForm extends FormView<IContactForm> {
 	protected _emailInput: HTMLInputElement;
 	protected _phoneInput: HTMLInputElement;
 
-	constructor(template: HTMLTemplateElement, protected events: IEvents) {
-		const fragment = template.content.cloneNode(true) as DocumentFragment;
-		const form = fragment.querySelector('form') as HTMLFormElement;
-
+	constructor(form: HTMLFormElement, protected events: IEvents) {
 		super(form, events);
 
-		this._emailInput = form.querySelector('input[name="email"]');
-		this._phoneInput = form.querySelector('input[name="phone"]');
+		this._emailInput = ensureElement<HTMLInputElement>('input[name="email"]', form);
+		this._phoneInput = ensureElement<HTMLInputElement>('input[name="phone"]', form);
 	}
 
 	clear(): void {

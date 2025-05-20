@@ -1,6 +1,6 @@
 import { CategoryType, IActions, IProduct } from '../../types';
 import { categoryClassMap } from '../../utils/constants';
-import { formatPrice } from '../../utils/utils';
+import { ensureElement, formatPrice } from '../../utils/utils';
 import { Component } from '../base/Component';
 
 export class ProductListView extends Component<IProduct> {
@@ -8,20 +8,18 @@ export class ProductListView extends Component<IProduct> {
 	protected _image: HTMLImageElement;
 	protected _category: HTMLElement;
 	protected _price: HTMLElement;
-	protected _button: HTMLButtonElement;
+	protected _button?: HTMLButtonElement;
 
-	constructor(template: HTMLTemplateElement, actions?: IActions) {
-		const container = template.content
-			.querySelector('.card')
-			.cloneNode(true) as HTMLElement;
+	constructor(container: HTMLElement, actions?: IActions) {
 		super(container);
-		this._title = container.querySelector('.card__title') as HTMLElement;
-		this._category = container.querySelector('.card__category') as HTMLElement;
-		this._image = container.querySelector('.card__image') as HTMLImageElement;
-		this._price = container.querySelector('.card__price') as HTMLElement;
+				
+		this._title = ensureElement<HTMLElement>('.card__title', container);
+		this._category = ensureElement<HTMLElement>('.card__category', container);
+		this._image = ensureElement<HTMLImageElement>('.card__image', container);
+		this._price = ensureElement<HTMLElement>('.card__price', container);
 		this._button = container.querySelector(
 			'.card__button'
-		) as HTMLButtonElement;
+		) ;
 
 		if (actions?.onClick) {
 			if (this._button) {

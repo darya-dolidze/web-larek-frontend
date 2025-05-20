@@ -1,4 +1,5 @@
 import { IForm, FormErrors } from '../../types';
+import { ensureElement } from '../../utils/utils';
 import { Component } from '../base/Component';
 import { IEvents } from '../base/events';
 
@@ -9,10 +10,10 @@ export class FormView<T> extends Component<IForm> {
 	constructor(protected container: HTMLFormElement, protected events: IEvents) {
 		super(container);
 
-		this._submit = container.querySelector(
-			'button[type=submit]'
-		) as HTMLButtonElement;
-		this._errors = container.querySelector('.form__errors') as HTMLElement;
+		this._submit = ensureElement<HTMLButtonElement>(
+			'button[type=submit]', container
+		);
+		this._errors = ensureElement<HTMLElement>('.form__errors', container);
 
 		// Слушаем все изменения полей ввода
 		this.container.addEventListener('input', (e: Event) => {

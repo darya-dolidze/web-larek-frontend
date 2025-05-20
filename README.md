@@ -207,6 +207,11 @@ export type FormType = 'orderform' | 'contactform';
 ```typescript
 async getListProducts(): Promise<IProduct[]>
 ```
+- Отправляет данные о заказе на сервер
+
+```typescript
+async sendOrder(orderData: IOrder): Promise<IOrderResult>
+```
 
 ## Классы модели данных
 
@@ -311,8 +316,6 @@ valid: boolean
 Свойства:
 ```typescript
 items: IProduct[] // Список товаров, находящихся в корзине.
-countProduct: number // Общее количество товаров в корзине.
-totalPrice: number // Общая стоимость всех товаров в корзине.
 ```
 
 Конструктор:
@@ -349,10 +352,10 @@ getCount(): number
 getTotalPrice(): number
 
 ```
-- Обновить данные о количестве и стоимости.
+- Получение текущего состояния корзины.
 
 ```typescript
-update(): void
+getState(): void
 ```
 - Очистить корзину.
 
@@ -639,7 +642,7 @@ protected onInputChange(field: keyof T, value: string)
 Методы:
 ```typescript
 // Установка способа оплаты
-    setpayment(method: string)
+    setPayment(method: string)
 // Очистка формы
     clear(): void 
 ```

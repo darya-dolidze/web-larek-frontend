@@ -32,6 +32,6 @@ export class AppState extends Model<IAppState> {
 	}
 
 	setTotalPriceOrder() {
-		this.order.order.total = this.basket.totalPrice;
+		this.order.order.total = this.basket.getTotalPrice();
 	}
 }

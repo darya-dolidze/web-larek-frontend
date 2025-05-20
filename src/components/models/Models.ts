@@ -96,38 +96,43 @@ export class OrderModel extends Model<IOrder> {
 
 export class BasketModel extends Model<IProduct[]> {
 	items: IProduct[];
-	countProduct: number;
-	totalPrice: number;
 
 	constructor(data: IProduct[] = [], events: IEvents) {
 		super(data, events);
 		this.items = data ?? [];
-		this.update();
 	}
 	add(product: IProduct) {
 		this.items.push(product);
-		this.update();
+		this.emitChanges('basket:changed');
 	}
 	remove(productId: string) {
-		this.items = this.items.filter((p) => p.id !== productId);
+		const removedProduct = this.items.find(p => p.id === productId);
+        this.items = this.items.filter((p) => p.id !== productId);
+        this.emitChanges('basket:changed', {
+            action: 'remove',
+            product: removedProduct
+        });
 	}
 
-	getCount() {
-		return this.countProduct;
+	getCount() : number {
+        return this.items.length;
 	}
 
-	getTotalPrice() {
-		return this.totalPrice;
+	getTotalPrice() : number {
+        return this.items.reduce((sum, item) => sum + (item.price || 0), 0);
 	}
 
-	update() {
-		this.countProduct = this.items.length;
-		this.totalPrice = this.items.reduce(
-			(sum, item) => sum + (item.price ?? 0),
-			0
-		);
-	}
 	clean() {
-		this.items.length = 0;
+		this.emitChanges('basket:changed', {
+            action: 'clean'
+        });
 	}
+	
+	getState() {
+        return {
+            items: this.items,
+            count: this.getCount(),
+            total: this.getTotalPrice()
+        };
+    }
 }

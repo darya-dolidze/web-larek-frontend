@@ -1,3 +1,4 @@
+import { ensureElement } from '../../utils/utils';
 import { IEvents } from '../base/events';
 import { FormView } from './FormView';
 
@@ -11,24 +12,21 @@ export class OrderForm extends FormView<IOrderForm> {
 	protected _payment = '';
 	protected _buttons: NodeListOf<HTMLButtonElement>;
 
-	constructor(template: HTMLTemplateElement, protected events: IEvents) {
-		const fragment = template.content.cloneNode(true) as DocumentFragment;
-		const form = fragment.querySelector('form') as HTMLFormElement;
-
+	constructor(form: HTMLFormElement, protected events: IEvents) {
 		super(form, events);
 
-		this._address = form.querySelector('input[name="address"]');
+		this._address = ensureElement<HTMLInputElement>('input[name="address"]', form);
 		this._buttons = form.querySelectorAll('.order__buttons button');
 
 		// навесим слушатели на кнопки способа оплаты
 		this._buttons.forEach((button) => {
 			button.addEventListener('click', () => {
-				this.setpayment(button.name);
+				this.setPayment(button.name);
 			});
 		});
 	}
 
-	setpayment(method: string) {
+	setPayment(method: string) {
 		this._payment = method;
 
 		this._buttons.forEach((button) => {

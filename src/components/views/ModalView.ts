@@ -13,16 +13,16 @@ export class ModalView extends Component<IModal> {
 
 	constructor(container: HTMLElement, protected events: IEvents) {
 		super(container);
-		this._modalElement = ensureElement<HTMLTemplateElement>('.modal');
-		this._modalContent = this._modalElement?.querySelector(
-			'.modal__content'
-		) as HTMLElement;
-		this._closeButton = this._modalElement?.querySelector(
-			'.modal__close'
-		) as HTMLElement;
+		this._modalElement = container;
+		this._modalContent = ensureElement<HTMLElement>(
+			'.modal__content', this._modalElement
+		);
+		this._closeButton = ensureElement<HTMLElement>(
+			'.modal__close', this._modalElement
+		);
 		this._closeButton.addEventListener('click', () => this.close());
-		this.container.addEventListener('click', (event) => {
-			if (event.target === this.container) {
+		container.addEventListener('click', (event) => {
+			if (event.target === container || event.target === this._modalElement) {
 				this.close();
 			}
 		});

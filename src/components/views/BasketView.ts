@@ -1,5 +1,5 @@
 import { IActions, IProductBasket } from '../../types';
-import { formatPrice } from '../../utils/utils';
+import { formatPrice, ensureElement } from '../../utils/utils';
 import { Component } from '../base/Component';
 import { IEvents } from '../base/events';
 
@@ -15,16 +15,14 @@ export class BasketView extends Component<IBasket> {
 	protected _basketPrice: HTMLElement;
 
 	constructor(template: HTMLTemplateElement, protected events: IEvents) {
-		const basketContainer = template.content
-			.querySelector('.basket')
-			.cloneNode(true) as HTMLElement;
+		const basketContainer = template
 
 		super(basketContainer);
 
-		this._title = basketContainer.querySelector('.modal__title');
-		this._basketList = basketContainer.querySelector('.basket__list');
-		this._basketPrice = basketContainer.querySelector('.basket__price');
-		this._buttonOrder = basketContainer.querySelector('.basket__button');
+		this._title = ensureElement<HTMLElement>('.modal__title', basketContainer);
+		this._basketList = ensureElement<HTMLElement>('.basket__list', basketContainer);
+		this._basketPrice = ensureElement<HTMLElement>('.basket__price', basketContainer);
+		this._buttonOrder = ensureElement<HTMLButtonElement>('.basket__button', basketContainer);
 
 		this._buttonOrder.addEventListener('click', () => {
 			this.events.emit('order:open');
@@ -57,24 +55,20 @@ export class BasketItemView extends Component<IProductBasket> {
 	protected _button: HTMLButtonElement;
 
 	constructor(
-		template: HTMLTemplateElement,
+		itemElement: HTMLElement,
 		protected events: IEvents,
 		actions?: IActions
 	) {
-		const itemElement = template.content
-			.querySelector('.basket__item')
-			?.cloneNode(true) as HTMLElement;
-
 		super(itemElement);
 
-		this._title = itemElement.querySelector('.card__title') as HTMLElement;
-		this._price = itemElement.querySelector('.card__price') as HTMLElement;
-		this._button = itemElement.querySelector(
-			'.basket__item-delete'
+		this._title = ensureElement<HTMLElement>('.card__title', itemElement)
+		this._price = ensureElement<HTMLElement>('.card__price', itemElement)
+		this._button = ensureElement<HTMLButtonElement>(
+			'.basket__item-delete', itemElement
 		) as HTMLButtonElement;
-		this._index = itemElement.querySelector(
-			'.basket__item-index'
-		) as HTMLElement;
+		this._index = ensureElement<HTMLElement>(
+			'.basket__item-index', itemElement
+		)
 		this._button.addEventListener('click', (e) => {
 			this.container.remove();
 			actions?.onClick(e);
